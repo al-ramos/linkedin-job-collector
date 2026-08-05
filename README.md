@@ -2,7 +2,7 @@
 
 Extensão para Google Chrome com painel próprio que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON. A versão 2 não exige Python, servidor local nem Console do navegador.
 
-Versão atual da extensão: **2.1.0**.
+Versão atual da extensão: **2.1.1**.
 
 > Este é um projeto independente. Não é afiliado, patrocinado nem mantido pelo LinkedIn.
 
@@ -48,7 +48,7 @@ Também é possível usar **Code → Download ZIP** no GitHub e extrair o arquiv
 2. Ative **Modo do desenvolvedor**, no canto superior direito.
 3. Clique em **Carregar sem compactação**.
 4. Selecione somente a pasta `extensao-linkedin`.
-5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.1.0**.
+5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.1.1**.
 6. Opcionalmente, fixe a extensão no menu de extensões do Chrome.
 
 Não selecione a raiz inteira do projeto; o arquivo `manifest.json` está dentro de `extensao-linkedin`.
@@ -115,7 +115,7 @@ Para integrar ao portal, use o endpoint:
 https://radar-carreira-almir-v2.prof-andreiamr.chatgpt.site/api/collector/import
 ```
 
-Informe no painel a mesma chave configurada como `LINKEDIN_COLLECTOR_SECRET` no ambiente do Radar. A chave é salva somente em `chrome.storage.local` no perfil atual do navegador.
+Entre como administrador no Radar, abra **Extensão LinkedIn**, clique em **Gerar chave**, depois em **Salvar** e **Copiar**. Cole essa chave no painel da extensão e clique em **Testar conexão**. O Radar armazena somente o hash da chave; a extensão salva o texto apenas em `chrome.storage.local` no perfil atual do navegador.
 
 ## Como a paginação funciona
 
@@ -264,8 +264,8 @@ O Chrome pode bloquear múltiplos downloads. Quando solicitado, permita múltipl
 
 ### O envio ao Radar retorna 401
 
-- Confirme que a chave no painel é igual a `LINKEDIN_COLLECTOR_SECRET` no ambiente publicado.
-- Como compatibilidade, o portal também aceita `COLLECTOR_SECRET` enquanto a chave dedicada não estiver configurada.
+- Gere uma nova chave em **Radar → Extensão LinkedIn**, salve-a e copie-a novamente para o painel da extensão.
+- Clique em **Testar conexão** antes de iniciar uma coleta completa.
 - Não inclua `Bearer` no campo; a extensão adiciona esse prefixo automaticamente.
 
 ### Nenhuma vaga corresponde às stacks

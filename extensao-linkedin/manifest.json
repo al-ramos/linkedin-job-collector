@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Coletor de Vagas do LinkedIn",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Painel automático para organizar pesquisas do LinkedIn e exportar vagas em CSV e JSON.",
   "permissions": ["activeTab", "scripting", "tabs", "storage", "downloads"],
   "host_permissions": ["https://www.linkedin.com/*", "https://radar-carreira-almir-v2.prof-andreiamr.chatgpt.site/*"],

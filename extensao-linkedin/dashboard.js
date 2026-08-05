@@ -10,6 +10,7 @@ globalThis.STACK_CATALOG.forEach(stack=>{const label=document.createElement('lab
 function readSettings(){return{selectedStacks:[...stackOptions.querySelectorAll('input:checked')].map(input=>input.value),customTerms:document.querySelector('#custom-terms').value.trim(),downloadFiles:document.querySelector('#download-files').checked,sendRadar:document.querySelector('#send-radar').checked,downloadFolder:document.querySelector('#download-folder').value.trim(),portalUrl:document.querySelector('#portal-url').value.trim(),portalToken:document.querySelector('#portal-token').value.trim()}}
 async function saveSettings(silent=false){const settings=readSettings();if(settings.sendRadar&&(!settings.portalUrl||!settings.portalToken)){if(!silent)showStatus('Informe o endpoint e a chave do Radar.',true);return null}await chrome.storage.local.set(settings);if(!silent)showStatus('Parâmetros salvos neste navegador.');return settings}
 async function loadSettings(){const settings=await chrome.storage.local.get(DEFAULTS);stackOptions.querySelectorAll('input').forEach(input=>input.checked=settings.selectedStacks.includes(input.value));document.querySelector('#custom-terms').value=settings.customTerms;document.querySelector('#download-files').checked=settings.downloadFiles;document.querySelector('#send-radar').checked=settings.sendRadar;document.querySelector('#download-folder').value=settings.downloadFolder;document.querySelector('#portal-url').value=settings.portalUrl;document.querySelector('#portal-token').value=settings.portalToken}
+async function testRadar(){const settings=readSettings();if(!settings.portalUrl||!settings.portalToken){showStatus('Informe o endpoint e a chave do Radar.',true);return}showStatus('Testando a conexão com o Radar…');try{const response=await fetch(settings.portalUrl,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${settings.portalToken}`},body:JSON.stringify({action:'test'})}),data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||`Radar respondeu ${response.status}`);await chrome.storage.local.set(settings);showStatus('Conexão confirmada. A extensão já pode enviar vagas ao Radar.')}catch(error){showStatus(`Não foi possível conectar: ${error.message}`,true)}}
 
 function listSearches(){
   openSearches.replaceChildren(new Option('Procurando abas do LinkedIn…',''));
@@ -24,6 +25,7 @@ function listSearches(){
 document.querySelector('#refresh-searches').addEventListener('click',listSearches);
 document.querySelector('#open-linkedin').addEventListener('click',()=>chrome.tabs.create({url:'https://www.linkedin.com/jobs/search/'}));
 document.querySelector('#save-settings').addEventListener('click',()=>saveSettings());
+document.querySelector('#test-radar').addEventListener('click',testRadar);
 document.querySelector('#start').addEventListener('click',async()=>{
   const typedUrl=searchInput.value.trim();
   const url=typedUrl||openSearches.value;

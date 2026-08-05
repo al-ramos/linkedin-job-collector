@@ -2,7 +2,7 @@
 
 Extensão para Google Chrome com painel próprio que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON. A versão 2 não exige Python, servidor local nem Console do navegador.
 
-Versão atual da extensão: **2.0.0**.
+Versão atual da extensão: **2.1.0**.
 
 > Este é um projeto independente. Não é afiliado, patrocinado nem mantido pelo LinkedIn.
 
@@ -19,6 +19,9 @@ Versão atual da extensão: **2.0.0**.
 - Gera um único arquivo CSV e um único arquivo JSON por execução.
 - Exibe o progresso em um painel azul e a conclusão em um painel verde.
 - Não solicita nem armazena usuário, senha, cookies ou token do LinkedIn.
+- Filtra vagas por stacks selecionadas e termos personalizados.
+- Salva CSV e JSON em uma subpasta configurável de Downloads.
+- Pode enviar as vagas compatíveis diretamente ao Radar de Carreira.
 
 ## Início rápido
 
@@ -45,7 +48,7 @@ Também é possível usar **Code → Download ZIP** no GitHub e extrair o arquiv
 2. Ative **Modo do desenvolvedor**, no canto superior direito.
 3. Clique em **Carregar sem compactação**.
 4. Selecione somente a pasta `extensao-linkedin`.
-5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.0.0**.
+5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.1.0**.
 6. Opcionalmente, fixe a extensão no menu de extensões do Chrome.
 
 Não selecione a raiz inteira do projeto; o arquivo `manifest.json` está dentro de `extensao-linkedin`.
@@ -90,6 +93,30 @@ O painel abre em uma página interna da própria extensão. Não é necessário 
 
 O campo de link é opcional. Quando preenchido, ele substitui a pesquisa selecionada na lista e abre a URL informada. A seleção de uma aba aberta é preferível porque alguns filtros do LinkedIn podem permanecer no estado interno da página e não ser reproduzidos perfeitamente ao reabrir somente a URL.
 
+### Filtrar por stacks
+
+1. Marque uma ou mais tecnologias em **Stacks aceitas**.
+2. Adicione termos específicos separados por vírgula quando necessário.
+3. Salve os parâmetros.
+
+A correspondência usa o título e a descrição da vaga. Uma vaga é mantida quando corresponde a pelo menos uma stack marcada ou termo adicional. Se nenhuma opção for marcada e nenhum termo for informado, todas as vagas são mantidas. As stacks detectadas também são gravadas no CSV, JSON e Radar.
+
+### Configurar os destinos
+
+- **Baixar CSV e JSON** grava os arquivos na subpasta indicada dentro da pasta Downloads do Chrome.
+- **Enviar ao Radar de Carreira** envia somente as vagas compatíveis ao endpoint configurado.
+- É possível ativar os dois destinos ao mesmo tempo.
+
+Por segurança, extensões do Chrome não podem gravar silenciosamente em um caminho absoluto arbitrário. O parâmetro local é uma subpasta relativa a Downloads, como `RadarCarreira` ou `Vagas/Java`.
+
+Para integrar ao portal, use o endpoint:
+
+```text
+https://radar-carreira-almir-v2.prof-andreiamr.chatgpt.site/api/collector/import
+```
+
+Informe no painel a mesma chave configurada como `LINKEDIN_COLLECTOR_SECRET` no ambiente do Radar. A chave é salva somente em `chrome.storage.local` no perfil atual do navegador.
+
 ## Como a paginação funciona
 
 O LinkedIn normalmente apresenta até 25 vagas por página. O coletor lê o total de resultados e calcula:
@@ -116,11 +143,11 @@ O total exportado pode ser menor que o total anunciado pelo LinkedIn quando:
 
 ## Arquivos exportados
 
-Os arquivos são salvos na pasta de downloads configurada no Chrome:
+Os arquivos são salvos na subpasta configurada dentro de Downloads:
 
 ```text
-vagas-linkedin-AAAA-MM-DD.csv
-vagas-linkedin-AAAA-MM-DD.json
+RadarCarreira/vagas-linkedin-AAAA-MM-DD.csv
+RadarCarreira/vagas-linkedin-AAAA-MM-DD.json
 ```
 
 ### Colunas e propriedades
@@ -131,6 +158,7 @@ vagas-linkedin-AAAA-MM-DD.json
 | `empresa` | Nome da empresa |
 | `local` | Localização e informações resumidas exibidas no topo |
 | `descricao` | Texto completo da descrição disponível na página |
+| `stack` | Stacks detectadas no título e na descrição |
 | `link` | URL canônica da vaga |
 | `coletado_em` | Data e hora da coleta em formato ISO 8601 |
 | `pagina` | Página da pesquisa em que a vaga foi encontrada |
@@ -177,16 +205,19 @@ O arquivo `manifest.json` declara:
 | `activeTab` | Trabalhar na aba escolhida pelo usuário |
 | `scripting` | Executar os coletores nas páginas autorizadas |
 | `tabs` | Listar pesquisas abertas, ativar a aba selecionada e acompanhar a navegação |
+| `storage` | Salvar stacks, destinos, pasta, endpoint e chave no perfil local do Chrome |
+| `downloads` | Gravar CSV e JSON na subpasta configurada sem perguntar a cada execução |
 | `https://www.linkedin.com/*` | Ler somente páginas do LinkedIn necessárias à coleta |
+| `https://radar-carreira-almir-v2.prof-andreiamr.chatgpt.site/*` | Enviar vagas ao portal somente quando essa opção estiver ativada |
 
 ## Privacidade e segurança
 
 - O processamento acontece localmente no navegador.
-- Os dados coletados não são enviados a servidores deste projeto.
+- Por padrão, os dados permanecem locais. Quando **Enviar ao Radar** estiver ativado, somente as vagas filtradas são enviadas ao endpoint indicado.
 - Não há backend, banco de dados, telemetria ou analytics.
 - A extensão não lê nem armazena senhas.
 - A extensão usa somente o conteúdo que a sessão autenticada já pode visualizar.
-- Os arquivos são gerados no próprio navegador e enviados diretamente para Downloads.
+- Os arquivos são gerados no próprio navegador e enviados diretamente para a subpasta de Downloads.
 - O projeto não tenta contornar CAPTCHA, autenticação, bloqueios ou controles de acesso.
 
 Revise o código antes de instalar extensões locais. O projeto é público justamente para permitir auditoria.
@@ -231,6 +262,18 @@ A rotina encerra quando não encontra vagas ou links novos. Isso pode acontecer 
 
 O Chrome pode bloquear múltiplos downloads. Quando solicitado, permita múltiplos downloads para `linkedin.com`. Verifique também a configuração de downloads do navegador.
 
+### O envio ao Radar retorna 401
+
+- Confirme que a chave no painel é igual a `LINKEDIN_COLLECTOR_SECRET` no ambiente publicado.
+- Como compatibilidade, o portal também aceita `COLLECTOR_SECRET` enquanto a chave dedicada não estiver configurada.
+- Não inclua `Bearer` no campo; a extensão adiciona esse prefixo automaticamente.
+
+### Nenhuma vaga corresponde às stacks
+
+- Revise as stacks marcadas e os termos adicionais.
+- A correspondência considera título e descrição completa.
+- Desmarque todas as stacks e apague termos adicionais para importar tudo.
+
 ### O CSV abre em uma única coluna
 
 Importe o arquivo no Excel escolhendo:
@@ -254,7 +297,9 @@ flowchart LR
     C -->|lista e ativa abas| D["Pesquisa do LinkedIn"]
     C -->|executa por página| E["page-collector.js"]
     E -->|vagas e total| C
-    C -->|CSV e JSON| F["Downloads"]
+    C -->|filtra por stacks| G["Vagas compatíveis"]
+    G -->|CSV e JSON| F["Downloads"]
+    G -->|Bearer token| H["Radar de Carreira / Cloudflare D1"]
 ```
 
 ### Responsabilidade dos arquivos
@@ -265,6 +310,7 @@ flowchart LR
 | `extensao-linkedin/dashboard.html` | Interface principal e seleção das pesquisas |
 | `extensao-linkedin/dashboard.js` | Comunicação direta do painel com o service worker |
 | `extensao-linkedin/dashboard.css` | Estilos do painel completo |
+| `extensao-linkedin/stacks.js` | Catálogo de stacks e termos reconhecidos |
 | `extensao-linkedin/background.js` | Orquestra abas, paginação, deduplicação e exportação consolidada |
 | `extensao-linkedin/page-collector.js` | Lê o total e coleta os cartões de uma página |
 | `extensao-linkedin/collector.js` | Coletor independente usado pelo popup |
@@ -285,7 +331,8 @@ flowchart LR
 7. O orquestrador calcula `ceil(total / 25)`.
 8. Nas páginas seguintes, clica na paginação do próprio LinkedIn para preservar os filtros.
 9. Os resultados são deduplicados pelo campo `link`.
-10. A última página gera CSV e JSON consolidados.
+10. O service worker identifica stacks e aplica os filtros salvos.
+11. Os destinos habilitados recebem somente as vagas compatíveis.
 
 ## Desenvolvimento
 

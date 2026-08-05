@@ -1,24 +1,335 @@
-# Coletor automático de vagas do LinkedIn
+# Coletor de Vagas do LinkedIn
 
-## Instalação única no Chrome
+Extensão local para Google Chrome acompanhada de um painel web que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON.
+
+Versão atual da extensão: **1.4.1**.
+
+> Este é um projeto independente. Não é afiliado, patrocinado nem mantido pelo LinkedIn.
+
+## O que o projeto faz
+
+- Detecta as pesquisas de vagas do LinkedIn abertas no Chrome.
+- Mostra o total de resultados de cada pesquisa para evitar escolher a aba errada.
+- Trabalha diretamente na aba selecionada, preservando filtros mantidos internamente pelo LinkedIn.
+- Lê o total apresentado na página, como `212 resultados`.
+- Calcula automaticamente o número de páginas considerando até 25 vagas por página.
+- Percorre a paginação do próprio LinkedIn em sequência.
+- Abre cada cartão para capturar a descrição da vaga.
+- Remove vagas repetidas usando o link da vaga como identificador.
+- Gera um único arquivo CSV e um único arquivo JSON por execução.
+- Exibe o progresso em um painel azul e a conclusão em um painel verde.
+- Não solicita nem armazena usuário, senha, cookies ou token do LinkedIn.
+
+## Início rápido
+
+### Requisitos
+
+- Google Chrome ou navegador compatível com extensões Manifest V3.
+- Conta do LinkedIn já autenticada no navegador.
+- Python 3 disponível apenas para servir o painel local.
+- Windows, macOS ou Linux.
+
+### 1. Baixar o projeto
+
+Com Git:
+
+```bash
+git clone https://github.com/al-ramos/linkedin-job-collector.git
+cd linkedin-job-collector
+```
+
+Também é possível usar **Code → Download ZIP** no GitHub e extrair o arquivo.
+
+### 2. Instalar a extensão no Chrome
 
 1. Abra `chrome://extensions`.
-2. Ative **Modo do desenvolvedor**.
+2. Ative **Modo do desenvolvedor**, no canto superior direito.
 3. Clique em **Carregar sem compactação**.
-4. Selecione a pasta `extensao-linkedin` deste projeto.
-5. Fixe a extensão **Coletor de Vagas do LinkedIn** na barra do Chrome.
+4. Selecione somente a pasta `extensao-linkedin`.
+5. Confirme que aparece **Coletor de Vagas do LinkedIn 1.4.1**.
+6. Opcionalmente, fixe a extensão no menu de extensões do Chrome.
 
-## Uso pela página
+Não selecione a raiz inteira do projeto; o arquivo `manifest.json` está dentro de `extensao-linkedin`.
 
-1. Inicie a página com `python -m http.server 8000` nesta pasta.
-2. Abra `http://localhost:8000`.
-3. Cole o link da busca do LinkedIn com os filtros desejados ou deixe vazio para usar a busca que já estiver aberta.
-4. Clique em **Iniciar coleta automática**.
-5. A busca será aberta; a rotina lerá o total de resultados e calculará todas as páginas automaticamente.
-6. Aguarde o painel azul indicar a conclusão.
+### 3. Iniciar o painel web
 
-A rotina percorre todas as páginas calculadas, também para quando deixa de encontrar vagas novas, elimina links repetidos e gera um único CSV/JSON consolidado.
+Na raiz do projeto, execute:
 
-O coletor baixa CSV e JSON automaticamente. Ele usa somente a sessão autenticada e não contorna login, CAPTCHA ou limitações do LinkedIn.
+```bash
+python -m http.server 8000
+```
 
-`index.html` e `linkedin-coletor.js` foram mantidos como alternativa manual.
+No Windows, se `python` não for reconhecido, tente:
+
+```powershell
+py -m http.server 8000
+```
+
+Depois abra:
+
+```text
+http://localhost:8000
+```
+
+Não abra `index.html` diretamente como `file://`. A integração da extensão está autorizada para `http://localhost:8000` e `http://127.0.0.1:8000`.
+
+## Uso recomendado: painel web
+
+### Preparar a pesquisa
+
+1. Entre no LinkedIn.
+2. Abra a página de pesquisa de vagas.
+3. Configure os filtros desejados: palavra-chave, localização, modalidade, experiência, período, candidatura simplificada e outros filtros disponíveis.
+4. Mantenha essa aba aberta.
+5. Se desejar coletar pesquisas diferentes, mantenha cada pesquisa em uma aba separada.
+
+### Selecionar e coletar
+
+1. Abra `http://localhost:8000`.
+2. Clique em **Atualizar lista**.
+3. Em **Pesquisas abertas detectadas**, escolha a opção pelo total exibido, por exemplo `212 resultados`.
+4. Deixe **Link da busca do LinkedIn** vazio quando usar uma pesquisa detectada.
+5. Clique em **Iniciar coleta automática**.
+6. A extensão ativará a própria aba escolhida, sem recriar a busca.
+7. Não altere filtros, troque a paginação nem feche a aba durante a coleta.
+8. Aguarde o painel verde com a mensagem de conclusão.
+
+O campo de link é opcional. Quando preenchido, ele substitui a pesquisa selecionada na lista e abre a URL informada. A seleção de uma aba aberta é preferível porque alguns filtros do LinkedIn podem permanecer no estado interno da página e não ser reproduzidos perfeitamente ao reabrir somente a URL.
+
+## Como a paginação funciona
+
+O LinkedIn normalmente apresenta até 25 vagas por página. O coletor lê o total de resultados e calcula:
+
+```text
+total de páginas = arredondar para cima(total de resultados ÷ 25)
+```
+
+Exemplo para 212 resultados:
+
+```text
+212 ÷ 25 = 8,48
+Total calculado: 9 páginas
+```
+
+As oito primeiras páginas podem conter 25 vagas e a última, até 12. A rotina também para antecipadamente quando uma página não contém vagas ou não acrescenta nenhum link novo. Isso evita ciclos caso o LinkedIn repita resultados ou altere a paginação.
+
+O total exportado pode ser menor que o total anunciado pelo LinkedIn quando:
+
+- a mesma vaga aparece mais de uma vez;
+- uma vaga expira ou é removida durante a execução;
+- o LinkedIn limita ou reorganiza os resultados;
+- algum cartão não está mais disponível para a conta autenticada.
+
+## Arquivos exportados
+
+Os arquivos são salvos na pasta de downloads configurada no Chrome:
+
+```text
+vagas-linkedin-AAAA-MM-DD.csv
+vagas-linkedin-AAAA-MM-DD.json
+```
+
+### Colunas e propriedades
+
+| Campo | Descrição |
+|---|---|
+| `titulo` | Título da vaga |
+| `empresa` | Nome da empresa |
+| `local` | Localização e informações resumidas exibidas no topo |
+| `descricao` | Texto completo da descrição disponível na página |
+| `link` | URL canônica da vaga |
+| `coletado_em` | Data e hora da coleta em formato ISO 8601 |
+| `pagina` | Página da pesquisa em que a vaga foi encontrada |
+
+O CSV usa ponto e vírgula como separador, inclui BOM UTF-8 e foi preparado para abertura no Excel em português. O JSON mantém a mesma informação em uma lista de objetos.
+
+## Outros modos de uso
+
+### Popup da extensão
+
+Ao clicar no ícone da extensão, existem duas opções:
+
+- **Coletar vagas desta busca**: executa o coletor na aba atual do LinkedIn.
+- **Abrir busca configurada**: abre a pesquisa histórica incluída no popup.
+
+O popup é mantido como modo rápido e coleta a busca atualmente carregada. Para seleção clara entre várias pesquisas e paginação consolidada, use o painel web.
+
+### Coletor manual
+
+O arquivo `linkedin-coletor.js` preserva o coletor manual usado nas primeiras versões. O script pode ser copiado e executado no Console do Chrome em uma página de busca do LinkedIn. O arquivo `index.html` é o painel automático atual.
+
+Esse modo é apenas uma alternativa de recuperação. O fluxo pela extensão evita a proteção de colagem do DevTools e é o modo recomendado.
+
+## Atualizar a extensão após mudanças
+
+Como a extensão é instalada sem compactação, alterações locais não são carregadas automaticamente:
+
+1. Abra `chrome://extensions`.
+2. Localize **Coletor de Vagas do LinkedIn**.
+3. Clique no ícone **Recarregar**.
+4. Confirme a versão exibida.
+5. Atualize com `Ctrl + R` as abas do LinkedIn já abertas.
+6. Atualize também `http://localhost:8000`.
+
+O recarregamento das páginas é necessário porque os scripts de integração são inseridos durante o carregamento da aba.
+
+## Permissões da extensão
+
+O arquivo `manifest.json` declara:
+
+| Permissão | Finalidade |
+|---|---|
+| `activeTab` | Trabalhar na aba escolhida pelo usuário |
+| `scripting` | Executar os coletores nas páginas autorizadas |
+| `tabs` | Listar pesquisas abertas, ativar a aba selecionada e acompanhar a navegação |
+| `https://www.linkedin.com/*` | Ler somente páginas do LinkedIn necessárias à coleta |
+| `http://localhost:8000/*` | Integrar a extensão ao painel local |
+| `http://127.0.0.1:8000/*` | Aceitar a forma alternativa do endereço local |
+
+## Privacidade e segurança
+
+- O processamento acontece localmente no navegador.
+- Os dados coletados não são enviados a servidores deste projeto.
+- Não há backend, banco de dados, telemetria ou analytics.
+- A extensão não lê nem armazena senhas.
+- A extensão usa somente o conteúdo que a sessão autenticada já pode visualizar.
+- Os arquivos são gerados no próprio navegador e enviados diretamente para Downloads.
+- O projeto não tenta contornar CAPTCHA, autenticação, bloqueios ou controles de acesso.
+
+Revise o código antes de instalar extensões locais. O projeto é público justamente para permitir auditoria.
+
+## Solução de problemas
+
+### A lista fica em “Procurando abas do LinkedIn”
+
+1. Confirme que a extensão está ativada em `chrome://extensions`.
+2. Clique em **Recarregar** no cartão da extensão.
+3. Atualize com `Ctrl + R` todas as abas de pesquisa do LinkedIn.
+4. Atualize o Organizador.
+5. Clique novamente em **Atualizar lista**.
+
+### A pesquisa desejada não aparece na lista
+
+- Confirme que a URL começa com `https://www.linkedin.com/jobs/search/`.
+- Mantenha a aba aberta e totalmente carregada.
+- Atualize a aba do LinkedIn e depois a lista do Organizador.
+
+### A rotina escolhe a pesquisa errada
+
+- Não dependa apenas da ordem das abas.
+- Escolha explicitamente a opção pelo total de resultados.
+- Deixe o campo de link vazio para preservar o estado interno da aba selecionada.
+
+### Ao informar um link, os filtros mudam
+
+Alguns filtros podem estar somente no estado interno do aplicativo do LinkedIn. Abra e configure a pesquisa manualmente, deixe a aba aberta e selecione-a em **Pesquisas abertas detectadas**.
+
+### Apenas 25 vagas são coletadas
+
+- Use o painel web, não apenas o popup da extensão.
+- Confirme que o total de resultados foi identificado na primeira página.
+- Observe se os botões numéricos ou o botão de próxima página estão disponíveis no LinkedIn.
+
+### A coleta para antes do total esperado
+
+A rotina encerra quando não encontra vagas ou links novos. Isso pode acontecer por duplicidades, resultados removidos, alterações no layout, limitação temporária ou carregamento incompleto do LinkedIn.
+
+### O segundo download não acontece
+
+O Chrome pode bloquear múltiplos downloads. Quando solicitado, permita múltiplos downloads para `linkedin.com`. Verifique também a configuração de downloads do navegador.
+
+### O CSV abre em uma única coluna
+
+Importe o arquivo no Excel escolhendo:
+
+- codificação UTF-8;
+- delimitador ponto e vírgula;
+- qualificador de texto aspas duplas.
+
+### O painel azul não aparece
+
+- Recarregue a extensão.
+- Atualize a página do LinkedIn.
+- Confirme que a página é uma busca de vagas e que a sessão está autenticada.
+- Mudanças no HTML do LinkedIn podem exigir atualização dos seletores.
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+    A["Painel local — index.html"] -->|eventos da página| B["bridge.js"]
+    B -->|mensagens da extensão| C["background.js"]
+    C -->|lista e ativa abas| D["Pesquisa do LinkedIn"]
+    C -->|executa por página| E["page-collector.js"]
+    E -->|vagas e total| C
+    C -->|CSV e JSON| F["Downloads"]
+```
+
+### Responsabilidade dos arquivos
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `index.html` | Interface principal, seleção de pesquisas e início da automação |
+| `extensao-linkedin/manifest.json` | Manifesto, permissões e versão da extensão |
+| `extensao-linkedin/background.js` | Orquestra abas, paginação, deduplicação e exportação consolidada |
+| `extensao-linkedin/bridge.js` | Faz a ponte entre o painel local e a extensão |
+| `extensao-linkedin/page-collector.js` | Lê o total e coleta os cartões de uma página |
+| `extensao-linkedin/collector.js` | Coletor independente usado pelo popup |
+| `extensao-linkedin/popup.html` | Interface do popup da extensão |
+| `extensao-linkedin/popup.js` | Ações rápidas do popup |
+| `extensao-linkedin/popup.css` | Estilos do popup |
+| `linkedin-coletor.js` | Alternativa manual executável no Console |
+
+## Fluxo interno da coleta
+
+1. O painel solicita à extensão a lista de abas em `/jobs/search/`.
+2. A extensão lê o total visível de cada aba e devolve as opções.
+3. O usuário seleciona a pesquisa pelo total de resultados.
+4. O painel envia o identificador da aba, a URL e o rótulo selecionado.
+5. O service worker ativa exatamente essa aba.
+6. `page-collector.js` lê o total, carrega os cartões e coleta os campos.
+7. O orquestrador calcula `ceil(total / 25)`.
+8. Nas páginas seguintes, clica na paginação do próprio LinkedIn para preservar os filtros.
+9. Os resultados são deduplicados pelo campo `link`.
+10. A última página gera CSV e JSON consolidados.
+
+## Desenvolvimento
+
+O projeto usa JavaScript, HTML e CSS puros, sem processo de build e sem dependências npm.
+
+Validações rápidas:
+
+```bash
+node --check extensao-linkedin/background.js
+node --check extensao-linkedin/bridge.js
+node --check extensao-linkedin/collector.js
+node --check extensao-linkedin/page-collector.js
+node --check extensao-linkedin/popup.js
+```
+
+Após modificar arquivos da extensão, aumente a versão em `extensao-linkedin/manifest.json`, recarregue a extensão e repita um teste com uma pesquisa de mais de 25 resultados.
+
+## Limitações conhecidas
+
+- O LinkedIn pode alterar classes, estrutura, paginação e comportamento sem aviso.
+- A coleta depende da sessão autenticada e do conteúdo disponibilizado para a conta.
+- A execução é sequencial e pode levar vários minutos em pesquisas grandes.
+- Não há execução totalmente desacompanhada, agendamento ou funcionamento com o Chrome fechado.
+- O projeto não envia candidaturas e não modifica vagas salvas.
+- Resultados dinâmicos podem mudar enquanto a coleta está em andamento.
+- O modo multipágina depende dos controles de paginação visíveis do LinkedIn.
+
+## Uso responsável
+
+Use a ferramenta somente em conteúdo que você tem autorização para visualizar. Respeite os termos aplicáveis, a privacidade de terceiros, limites da plataforma e a legislação da sua jurisdição. Evite execuções excessivas ou simultâneas.
+
+## Contribuição
+
+1. Crie um fork do repositório.
+2. Abra uma branch para a mudança.
+3. Atualize a documentação e a versão do manifesto quando necessário.
+4. Execute as validações de sintaxe.
+5. Teste o fluxo manual, o popup e a coleta multipágina.
+6. Abra um pull request descrevendo o cenário testado e o resultado.
+
+Ao reportar um problema, inclua a versão da extensão, o navegador, o sistema operacional, o total de resultados mostrado e a etapa em que a execução parou. Não publique cookies, credenciais ou informações pessoais.

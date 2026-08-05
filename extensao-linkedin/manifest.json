@@ -1,15 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Coletor de Vagas do LinkedIn",
-  "version": "1.4.1",
-  "description": "Organiza vagas de uma busca do LinkedIn e exporta CSV e JSON.",
+  "version": "2.0.0",
+  "description": "Painel automático para organizar pesquisas do LinkedIn e exportar vagas em CSV e JSON.",
   "permissions": ["activeTab", "scripting", "tabs"],
-  "host_permissions": ["https://www.linkedin.com/*", "http://localhost:8000/*", "http://127.0.0.1:8000/*"],
+  "host_permissions": ["https://www.linkedin.com/*"],
   "background": {"service_worker": "background.js"},
-  "content_scripts": [{
-    "matches": ["http://localhost:8000/*", "http://127.0.0.1:8000/*"],
-    "js": ["bridge.js"]
-  }],
+  "options_page": "dashboard.html",
   "action": {
     "default_title": "Coletar vagas",
     "default_popup": "popup.html"

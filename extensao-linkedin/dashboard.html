@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Organizador de vagas</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <main class="card">
+    <header><span class="eyebrow">COLETOR LINKEDIN</span><h1>Organizador de vagas</h1><p>Selecione uma pesquisa aberta e colete todas as páginas em CSV e JSON.</p></header>
+    <section class="fields">
+      <div class="search-row">
+        <label>Pesquisas abertas detectadas
+          <select id="open-searches"><option value="">Procurando abas do LinkedIn…</option></select>
+        </label>
+        <button class="secondary" id="refresh-searches" type="button">Atualizar lista</button>
+      </div>
+      <label>Link de outra busca (opcional)
+        <input id="search-url" type="url" autocomplete="off" placeholder="https://www.linkedin.com/jobs/search/…">
+      </label>
+    </section>
+    <section class="steps">
+      <div><b>1</b><p>Abra e configure uma pesquisa de vagas no LinkedIn.</p></div>
+      <div><b>2</b><p>Escolha a pesquisa acima pelo total de resultados.</p></div>
+      <div><b>3</b><p>Inicie a coleta e aguarde o painel verde na aba do LinkedIn.</p></div>
+    </section>
+    <div class="actions"><button class="primary" id="start">Iniciar coleta automática</button><button class="secondary" id="open-linkedin">Abrir LinkedIn Vagas</button></div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <aside>Todo o processamento acontece localmente. A extensão não recebe sua senha nem envia os resultados para servidores.</aside>
+  </main>
+  <script src="dashboard.js"></script>
+</body>
+</html>

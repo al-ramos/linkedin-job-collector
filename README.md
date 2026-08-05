@@ -1,8 +1,8 @@
 # Coletor de Vagas do LinkedIn
 
-Extensão local para Google Chrome acompanhada de um painel web que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON.
+Extensão para Google Chrome com painel próprio que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON. A versão 2 não exige Python, servidor local nem Console do navegador.
 
-Versão atual da extensão: **1.4.1**.
+Versão atual da extensão: **2.0.0**.
 
 > Este é um projeto independente. Não é afiliado, patrocinado nem mantido pelo LinkedIn.
 
@@ -26,7 +26,6 @@ Versão atual da extensão: **1.4.1**.
 
 - Google Chrome ou navegador compatível com extensões Manifest V3.
 - Conta do LinkedIn já autenticada no navegador.
-- Python 3 disponível apenas para servir o painel local.
 - Windows, macOS ou Linux.
 
 ### 1. Baixar o projeto
@@ -46,34 +45,29 @@ Também é possível usar **Code → Download ZIP** no GitHub e extrair o arquiv
 2. Ative **Modo do desenvolvedor**, no canto superior direito.
 3. Clique em **Carregar sem compactação**.
 4. Selecione somente a pasta `extensao-linkedin`.
-5. Confirme que aparece **Coletor de Vagas do LinkedIn 1.4.1**.
+5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.0.0**.
 6. Opcionalmente, fixe a extensão no menu de extensões do Chrome.
 
 Não selecione a raiz inteira do projeto; o arquivo `manifest.json` está dentro de `extensao-linkedin`.
 
-### 3. Iniciar o painel web
+### Assistente de instalação no Windows
 
-Na raiz do projeto, execute:
-
-```bash
-python -m http.server 8000
-```
-
-No Windows, se `python` não for reconhecido, tente:
+O script `instalar-no-chrome.ps1` abre a página de extensões, mostra a pasta correta e copia seu caminho. Execute com o botão direito **Executar com PowerShell** ou pelo terminal:
 
 ```powershell
-py -m http.server 8000
+powershell -ExecutionPolicy Bypass -File .\instalar-no-chrome.ps1
 ```
 
-Depois abra:
+Por segurança, o Chrome sempre exige a confirmação final em **Carregar sem compactação**. Nenhum script local pode ignorar essa proteção.
 
-```text
-http://localhost:8000
-```
+### 3. Abrir o painel
 
-Não abra `index.html` diretamente como `file://`. A integração da extensão está autorizada para `http://localhost:8000` e `http://127.0.0.1:8000`.
+1. Clique no ícone da extensão.
+2. Clique em **Abrir painel completo**.
 
-## Uso recomendado: painel web
+O painel abre em uma página interna da própria extensão. Não é necessário iniciar servidor, instalar dependências ou manter um terminal aberto.
+
+## Uso recomendado: painel da extensão
 
 ### Preparar a pesquisa
 
@@ -85,7 +79,7 @@ Não abra `index.html` diretamente como `file://`. A integração da extensão e
 
 ### Selecionar e coletar
 
-1. Abra `http://localhost:8000`.
+1. Clique no ícone da extensão e em **Abrir painel completo**.
 2. Clique em **Atualizar lista**.
 3. Em **Pesquisas abertas detectadas**, escolha a opção pelo total exibido, por exemplo `212 resultados`.
 4. Deixe **Link da busca do LinkedIn** vazio quando usar uma pesquisa detectada.
@@ -147,16 +141,17 @@ O CSV usa ponto e vírgula como separador, inclui BOM UTF-8 e foi preparado para
 
 ### Popup da extensão
 
-Ao clicar no ícone da extensão, existem duas opções:
+Ao clicar no ícone da extensão, existem três opções:
 
-- **Coletar vagas desta busca**: executa o coletor na aba atual do LinkedIn.
-- **Abrir busca configurada**: abre a pesquisa histórica incluída no popup.
+- **Abrir painel completo**: abre o Organizador nativo da extensão.
+- **Coletar somente esta página**: executa o coletor rápido na aba atual do LinkedIn.
+- **Abrir LinkedIn Vagas**: abre uma nova pesquisa de vagas.
 
-O popup é mantido como modo rápido e coleta a busca atualmente carregada. Para seleção clara entre várias pesquisas e paginação consolidada, use o painel web.
+Para seleção clara entre várias pesquisas e paginação consolidada, use **Abrir painel completo**.
 
 ### Coletor manual
 
-O arquivo `linkedin-coletor.js` preserva o coletor manual usado nas primeiras versões. O script pode ser copiado e executado no Console do Chrome em uma página de busca do LinkedIn. O arquivo `index.html` é o painel automático atual.
+O arquivo `linkedin-coletor.js` preserva o coletor manual usado nas primeiras versões. O script pode ser copiado e executado no Console do Chrome em uma página de busca do LinkedIn. O painel automático atual é `extensao-linkedin/dashboard.html`.
 
 Esse modo é apenas uma alternativa de recuperação. O fluxo pela extensão evita a proteção de colagem do DevTools e é o modo recomendado.
 
@@ -169,9 +164,9 @@ Como a extensão é instalada sem compactação, alterações locais não são c
 3. Clique no ícone **Recarregar**.
 4. Confirme a versão exibida.
 5. Atualize com `Ctrl + R` as abas do LinkedIn já abertas.
-6. Atualize também `http://localhost:8000`.
+6. Feche e abra novamente o painel completo.
 
-O recarregamento das páginas é necessário porque os scripts de integração são inseridos durante o carregamento da aba.
+O recarregamento das páginas garante que os scripts atualizados sejam usados na próxima execução.
 
 ## Permissões da extensão
 
@@ -183,8 +178,6 @@ O arquivo `manifest.json` declara:
 | `scripting` | Executar os coletores nas páginas autorizadas |
 | `tabs` | Listar pesquisas abertas, ativar a aba selecionada e acompanhar a navegação |
 | `https://www.linkedin.com/*` | Ler somente páginas do LinkedIn necessárias à coleta |
-| `http://localhost:8000/*` | Integrar a extensão ao painel local |
-| `http://127.0.0.1:8000/*` | Aceitar a forma alternativa do endereço local |
 
 ## Privacidade e segurança
 
@@ -226,7 +219,7 @@ Alguns filtros podem estar somente no estado interno do aplicativo do LinkedIn. 
 
 ### Apenas 25 vagas são coletadas
 
-- Use o painel web, não apenas o popup da extensão.
+- Use o painel completo, não apenas a coleta rápida do popup.
 - Confirme que o total de resultados foi identificado na primeira página.
 - Observe se os botões numéricos ou o botão de próxima página estão disponíveis no LinkedIn.
 
@@ -257,8 +250,7 @@ Importe o arquivo no Excel escolhendo:
 
 ```mermaid
 flowchart LR
-    A["Painel local — index.html"] -->|eventos da página| B["bridge.js"]
-    B -->|mensagens da extensão| C["background.js"]
+    A["Painel nativo — dashboard.html"] -->|mensagens da extensão| C["background.js"]
     C -->|lista e ativa abas| D["Pesquisa do LinkedIn"]
     C -->|executa por página| E["page-collector.js"]
     E -->|vagas e total| C
@@ -269,16 +261,18 @@ flowchart LR
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `index.html` | Interface principal, seleção de pesquisas e início da automação |
 | `extensao-linkedin/manifest.json` | Manifesto, permissões e versão da extensão |
+| `extensao-linkedin/dashboard.html` | Interface principal e seleção das pesquisas |
+| `extensao-linkedin/dashboard.js` | Comunicação direta do painel com o service worker |
+| `extensao-linkedin/dashboard.css` | Estilos do painel completo |
 | `extensao-linkedin/background.js` | Orquestra abas, paginação, deduplicação e exportação consolidada |
-| `extensao-linkedin/bridge.js` | Faz a ponte entre o painel local e a extensão |
 | `extensao-linkedin/page-collector.js` | Lê o total e coleta os cartões de uma página |
 | `extensao-linkedin/collector.js` | Coletor independente usado pelo popup |
 | `extensao-linkedin/popup.html` | Interface do popup da extensão |
 | `extensao-linkedin/popup.js` | Ações rápidas do popup |
 | `extensao-linkedin/popup.css` | Estilos do popup |
 | `linkedin-coletor.js` | Alternativa manual executável no Console |
+| `instalar-no-chrome.ps1` | Assistente de instalação para Windows |
 
 ## Fluxo interno da coleta
 
@@ -301,10 +295,10 @@ Validações rápidas:
 
 ```bash
 node --check extensao-linkedin/background.js
-node --check extensao-linkedin/bridge.js
 node --check extensao-linkedin/collector.js
 node --check extensao-linkedin/page-collector.js
 node --check extensao-linkedin/popup.js
+node --check extensao-linkedin/dashboard.js
 ```
 
 Após modificar arquivos da extensão, aumente a versão em `extensao-linkedin/manifest.json`, recarregue a extensão e repita um teste com uma pesquisa de mais de 25 resultados.

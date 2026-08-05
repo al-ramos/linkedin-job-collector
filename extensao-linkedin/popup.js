@@ -1,4 +1,4 @@
-const SEARCH_URL='https://www.linkedin.com/jobs/search/?currentJobId=4449141516&f_AL=true&f_E=4&f_F=it&f_I=96%2C4%2C3231%2C3102%2C6&f_TPR=r86400&f_WT=2&origin=JOB_SEARCH_PAGE_JOB_FILTER&sortBy=DD';
 const showStatus=(text,error=false)=>{const el=document.querySelector('#status');el.textContent=text;el.classList.toggle('error',error)};
-document.querySelector('#open').addEventListener('click',()=>chrome.tabs.create({url:SEARCH_URL}));
+document.querySelector('#dashboard').addEventListener('click',()=>chrome.runtime.openOptionsPage());
+document.querySelector('#open').addEventListener('click',()=>chrome.tabs.create({url:'https://www.linkedin.com/jobs/search/'}));
 document.querySelector('#collect').addEventListener('click',async()=>{const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id||!tab.url?.startsWith('https://www.linkedin.com/jobs/')){showStatus('Abra uma busca de vagas do LinkedIn primeiro.',true);return}try{await chrome.scripting.executeScript({target:{tabId:tab.id},files:['collector.js']});showStatus('Coleta iniciada. Acompanhe o painel azul.')}catch{showStatus('Recarregue o LinkedIn e tente novamente.',true)}});

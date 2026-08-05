@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Organizador de vagas do LinkedIn</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#172033;background:#f3f6fb}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:28px}.card{width:min(820px,100%);background:#fff;border:1px solid #dbe3ef;border-radius:22px;padding:32px;box-shadow:0 18px 55px #21365b18}h1{margin:0 0 10px;font-size:clamp(28px,5vw,44px);letter-spacing:-.04em}.lead{font-size:18px;color:#526078;line-height:1.55}.fields{display:grid;gap:14px;margin:26px 0}.fields label{font-weight:750}.fields input,.fields select{display:block;width:100%;margin-top:7px;border:1px solid #cbd6e5;border-radius:11px;padding:12px;font:inherit;color:#172033;background:#fff}.search-row{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:end}.mini{border:0;border-radius:11px;padding:12px 14px;background:#e8f1fb;color:#07539d;font-weight:750;cursor:pointer}.steps{display:grid;gap:13px;margin:22px 0}.step{display:flex;gap:14px;align-items:flex-start;padding:16px;background:#f7f9fc;border-radius:14px}.num{display:grid;place-items:center;min-width:30px;height:30px;border-radius:50%;background:#0a66c2;color:white;font-weight:800}.step p{margin:3px 0;line-height:1.45}.actions{display:flex;flex-wrap:wrap;gap:12px}.btn{border:0;border-radius:12px;padding:13px 18px;font:inherit;font-weight:750;cursor:pointer;text-decoration:none}.primary{background:#0a66c2;color:#fff}.secondary{background:#e8f1fb;color:#07539d}.status{min-height:24px;margin-top:15px;color:#08783e;font-weight:700}.note{margin-top:22px;padding:14px 16px;border-left:4px solid #e6a700;background:#fff8df;color:#644b00;line-height:1.45}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Organizador de vagas</h1>
+    <p class="lead">Abra a busca configurada, colete todas as vagas e baixe CSV e JSON com um único clique.</p>
+    <section class="fields">
+      <div class="search-row">
+        <label>Pesquisas abertas detectadas
+          <select id="open-searches"><option value="">Procurando abas do LinkedIn…</option></select>
+        </label>
+        <button class="mini" id="refresh-searches" type="button">Atualizar lista</button>
+      </div>
+      <label>Link da busca do LinkedIn
+        <input id="search-url" type="url" autocomplete="off" placeholder="Opcional: cole um link para substituir a seleção acima">
+      </label>
+    </section>
+    <section class="steps">
+      <div class="step"><span class="num">1</span><p>Confirme que sua conta do LinkedIn está conectada.</p></div>
+      <div class="step"><span class="num">2</span><p>Escolha a pesquisa aberta pelo total de resultados. Se preferir, cole outro link no campo.</p></div>
+      <div class="step"><span class="num">3</span><p>Clique em <strong>Iniciar coleta automática</strong>. A rotina calculará e percorrerá todas as páginas encontradas.</p></div>
+    </section>
+    <div class="actions">
+      <button class="btn primary" id="start">Iniciar coleta automática</button>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <aside class="note">A extensão precisa estar instalada e atualizada. A página não recebe sua senha nem envia os resultados para servidores.</aside>
+  </main>
+  <script>
+    const status = document.querySelector('#status');
+    const searchInput = document.querySelector('#search-url');
+    const openSearches = document.querySelector('#open-searches');
+    searchInput.value = '';
+    let responseReceived = false;
+    document.querySelector('#start').addEventListener('click', () => {
+      const url = searchInput.value.trim() || openSearches.value;
+      if (url && !url.startsWith('https://www.linkedin.com/jobs/search/')) {
+        status.textContent = 'Cole um link válido da página de busca de vagas do LinkedIn.';
+        return;
+      }
+      responseReceived = false;
+      status.textContent = url ? 'Abrindo o LinkedIn e calculando todas as páginas…' : 'Localizando a busca aberta no LinkedIn…';
+      const source = searchInput.value.trim() ? 'link informado' : openSearches.selectedOptions[0]?.textContent;
+      const tabId = searchInput.value.trim() ? null : Number(openSearches.selectedOptions[0]?.dataset.tabId) || null;
+      window.dispatchEvent(new CustomEvent('codex:start-linkedin-collection', {detail: {url, source, tabId}}));
+      setTimeout(() => {
+        if (!responseReceived) status.textContent = 'Recarregue esta página após atualizar a extensão no Chrome.';
+      }, 4000);
+    });
+    window.addEventListener('codex:linkedin-collection-response', event => {
+      responseReceived = true;
+      status.textContent = event.detail.ok
+        ? `Coleta iniciada usando: ${event.detail.source}. Acompanhe o painel azul.`
+        : event.detail.error;
+    });
+    const listSearches = () => {
+      openSearches.innerHTML = '<option value="">Procurando abas do LinkedIn…</option>';
+      window.dispatchEvent(new CustomEvent('codex:list-linkedin-searches'));
+    };
+    document.querySelector('#refresh-searches').addEventListener('click', listSearches);
+    window.addEventListener('codex:linkedin-searches-response', event => {
+      const searches = event.detail.searches || [];
+      openSearches.replaceChildren();
+      if (!searches.length) {
+        openSearches.add(new Option('Nenhuma pesquisa aberta encontrada', ''));
+        return;
+      }
+      searches.forEach(item => {
+        const option = new Option(`${item.total} — ${item.title}`, item.url);
+        option.dataset.tabId = item.id;
+        openSearches.add(option);
+      });
+    });
+    setTimeout(listSearches, 600);
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 Extensão para Google Chrome com painel próprio que coleta vagas visíveis em pesquisas do LinkedIn, percorre todas as páginas encontradas, remove duplicidades e exporta os resultados consolidados em CSV e JSON. A versão 2 não exige Python, servidor local nem Console do navegador.
 
-Versão atual da extensão: **2.1.1**.
+Versão atual da extensão: **2.2.0**.
 
 > Este é um projeto independente. Não é afiliado, patrocinado nem mantido pelo LinkedIn.
 
@@ -48,7 +48,7 @@ Também é possível usar **Code → Download ZIP** no GitHub e extrair o arquiv
 2. Ative **Modo do desenvolvedor**, no canto superior direito.
 3. Clique em **Carregar sem compactação**.
 4. Selecione somente a pasta `extensao-linkedin`.
-5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.1.1**.
+5. Confirme que aparece **Coletor de Vagas do LinkedIn 2.2.0**.
 6. Opcionalmente, fixe a extensão no menu de extensões do Chrome.
 
 Não selecione a raiz inteira do projeto; o arquivo `manifest.json` está dentro de `extensao-linkedin`.
@@ -288,6 +288,14 @@ Importe o arquivo no Excel escolhendo:
 - Atualize a página do LinkedIn.
 - Confirme que a página é uma busca de vagas e que a sessão está autenticada.
 - Mudanças no HTML do LinkedIn podem exigir atualização dos seletores.
+
+### Filtro do perfil no Radar
+
+Quando **Enviar ao Radar** está ativo, a extensão envia as vagas compatíveis com
+os filtros locais usando a chave do coletor. O portal também aplica o perfil de
+stacks obrigatórias salvo na conta: o painel azul informa quantas vagas foram
+aceitas e rejeitadas pelo perfil. A configuração de stacks no portal é a regra
+final para o banco; a extensão não substitui essa validação.
 
 ## Arquitetura
 

@@ -24,8 +24,17 @@
       <h2>Stacks aceitas</h2>
       <p>Marque as tecnologias desejadas. Sem marcação, todas as vagas serão mantidas.</p>
       <div class="stack-grid" id="stack-options"></div>
+      <label>Regra das stacks
+        <select id="stack-mode">
+          <option value="any">Qualquer stack selecionada</option>
+          <option value="all">Todas as stacks selecionadas</option>
+        </select>
+      </label>
       <label>Termos adicionais, separados por vírgula
         <input id="custom-terms" type="text" placeholder="Adobe Commerce, Magento, CRM">
+      </label>
+      <label>Termos para excluir, separados por vírgula
+        <input id="excluded-terms" type="text" placeholder="Estágio, Trainee, Júnior">
       </label>
       <h2>Destino</h2>
       <div class="destination-grid">
